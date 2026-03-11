@@ -1,0 +1,560 @@
+﻿PRODUCT REQUIREMENTS DOCUMENT
+Decentralized KYC System
+Powered by Blockchain, Smart Contracts & Client-Side Hash Verification
+Version 3.0 ù Privacy-Preserving Multi-Entity Ecosystem
+Document Version
+v3.0 (Updated ù Multi-Entity Ecosystem)
+Project Type
+Final Year / Academic Project
+Status
+Draft
+Date
+March 2025
+Blockchain Network
+Ethereum (Sepolia Testnet)
+Smart Contract Language
+Solidity ^0.8.0
+Key Innovation
+Client-side SHA-256 hashing ù document never transmitted; unlimited entity types supported
+Classification
+Confidential
+1. Executive Summary
+The Decentralized KYC (Know Your Customer) System is a blockchain-based identity verification platform that enables a user to verify their identity once and reuse that verified identity across an unlimited number of institutions and entity types ù without ever transmitting their original document to any party.
+Version 3.0 expands the system from a two-node model (Node 1 + one additional bank) to a true Multi-Entity Ecosystem. The platform now natively supports any combination of entity types operating as verifying nodes, including:
+Banks and financial institutions (retail, investment, neobanks)
+Cryptocurrency exchanges (CEX and DEX)
+Insurance companies (life, health, general)
+Government portals (tax authorities, passport offices, e-government services)
+Healthcare providers (hospitals, clinics, pharmacies)
+DeFi and Web3 platforms (lending protocols, yield aggregators, DEXs)
+Telecom operators (mobile and broadband providers)
+Any other regulated or compliance-driven entity type
+The system's core innovation remains its Privacy-Preserving Multi-Node Hash Verification Protocol. When a user uploads their identity document to the KYC DApp, a SHA-256 cryptographic hash is generated entirely within the user's browser. The document itself never leaves the user's device. Only this 64-character hash fingerprint is stored on the Ethereum blockchain.
+When any entity node ù regardless of type ù needs to verify the same user, the user uploads their document to the DApp again. The DApp regenerates the hash client-side and sends only the hash to the entity's API endpoint. The entity node then cross-checks this hash against the immutable blockchain record, granting or denying access based on whether the hashes match. The original document is never seen by any entity node at any point.
+A new on-chain Entity Registry allows the admin to register, configure, and manage any number of entity nodes across all supported entity types. Each entity is identified by type, has configurable permissions, and can be added or removed dynamically without redeploying the contract.
+This design is fully GDPR-compliant, fraud-resistant, and production-grade ù closely mirroring how enterprise identity systems like Sovrin and KILT Protocol operate in the real world, while extending their reach to the full breadth of the regulated economy.
+2. Problem Statement
+2.1 Current KYC Challenges
+Redundancy: Users submit identity documents to every bank, exchange, insurer, government portal, or platform separately
+Document Exposure: Each new institution receives, stores, and processes a full copy of sensitive documents ù multiplying breach risk with every new submission
+No User Control: Users have no visibility or control over who holds copies of their passport, ID, or utility bills
+High Cost: Financial institutions globally spend over $1.8 billion annually on KYC compliance
+Slow Onboarding: Manual KYC can take 3û14 business days per institution
+Centralized Data Silos: Each institution's KYC database is a honeypot for hackers
+Sector Fragmentation: Banks, insurers, exchanges, and government agencies each run completely separate KYC processes ù even for the same user
+2.2 The Core Privacy Problem This System Solves
+Even in systems that reuse KYC across institutions, the standard approach still requires the user to send their document to every subsequent institution. This means the document travels across networks and gets stored in multiple places ù at every bank, every insurer, every exchange, every government portal.
+This system solves that entirely and at scale. The document is hashed on the user's own device. No institution beyond Node 1 ever receives or stores the document ù not the bank, not the crypto exchange, not the insurance company, not the government portal. Every entity node, regardless of type, only ever receives a 64-character mathematical fingerprint which is cryptographically useless without the original document.
+2.3 The Multi-Entity Gap This Version Addresses
+Version 2 demonstrated that a second node (a single extra bank) could verify a user via hash comparison. However, real-world identity reuse spans sectors, not just banks. A user who is KYC-verified at their primary bank should be able to instantly onboard to a crypto exchange, apply for insurance, access government services, and register on a DeFi protocol ù all without ever submitting documents again.
+Version 3 closes this gap by introducing a universal multi-entity architecture that treats all institutional types as first-class verifying nodes within a single unified system.
+3. Project Scope & Objectives
+3.1 In Scope (MVP)
+Client-side SHA-256 document hashing (document never leaves user's browser)
+Smart contract for KYC registration, verification, hash storage, and revocation
+On-chain Entity Registry supporting unlimited entity types: Banks, Crypto Exchanges, Insurance, Government, Healthcare, DeFi/Web3, Telecom, and Other
+Multi-entity hash verification: any registered entity node can verify users using only hash comparison
+User registration and document hash submission flow
+Node 1 (Primary Verifier) approval and hash confirmation on-chain
+Per-entity verification endpoint using blockchain hash cross-check
+Entity-type-aware event emission (logs which entity type performed each check)
+React.js frontend with MetaMask wallet integration and entity selector UI
+Deployment on Ethereum Sepolia Testnet
+3.2 Out of Scope (Future Phases)
+Zero-Knowledge Proof (ZKP) integration
+IPFS-based encrypted document storage
+Cross-chain identity portability
+Mobile application
+Integration with real banking or government APIs
+User-controlled selective disclosure per entity type
+4. Stakeholders & User Personas
+The multi-entity architecture introduces a wider set of stakeholders than the original two-node design. The following table captures all roles in the ecosystem:
+Role
+Who They Are
+Responsibility
+Key Need
+Admin
+Contract deployer / project owner
+Deploy contract, assign verifiers, manage entity registry
+Secure access control & system integrity
+Node 1 (Primary Verifier)
+Bank, Govt body, or licensed KYC provider
+Review off-chain documents, confirm document hash on-chain
+One-time deep verification with hash locking
+End User
+Individual seeking KYC verification
+Upload doc to DApp, get hash generated, get verified by Node 1
+Verify once ù never send document again
+Bank / Financial Institution
+Retail bank, investment bank, neobank
+Receive hash from DApp, cross-check blockchain, onboard customer
+Instant compliant onboarding without storing documents
+Crypto Exchange
+CEX or DEX with KYC requirements
+Call checkDocumentHash() for AML/KYC compliance
+Automated compliance check in seconds
+Insurance Company
+Life, health, or general insurer
+Verify policyholder identity without re-collecting documents
+Reduce onboarding friction and fraud
+Government Portal
+Tax authority, passport office, e-gov
+Verify citizen KYC status for service delivery
+Trusted, immutable identity proof
+Healthcare Provider
+Hospital, clinic, pharmacy
+Confirm patient identity for secure record access
+Fraud-resistant patient ID verification
+DeFi / Web3 Platform
+Lending, DEX, yield protocol
+Lightweight KYC gate for compliant DeFi participation
+On-chain KYC without custody of PII
+Telecom Operator
+Mobile / broadband provider
+KYC for SIM registration or account opening
+Regulatory compliance at onboarding
+Regulator
+Government or compliance authority
+Audit on-chain verification history and events
+Transparent, immutable compliance audit trail
+5. Functional Requirements
+5.1 Client-Side Hashing Module
+FR-01: Document Upload & Hash Generation
+When a user selects their identity document on the DApp, the frontend immediately computes a SHA-256 hash of the file using the browser's built-in Web Crypto API. The document itself is never uploaded to any server or transmitted anywhere ù regardless of which entity type the user is interacting with.
+Input: User selects file via file picker (passport, ID, utility bill, etc.)
+Processing: SHA-256 hash computed entirely inside the browser using Web Crypto API
+Output: 64-character hexadecimal hash string displayed to the user
+Constraint: File never leaves the user's device at any point in this step
+Performance: Hash generation completes in under 1 second for files up to 10MB
+5.2 Smart Contract Module
+FR-02: User Registration
+Any Ethereum wallet address can register by calling registerUser() with their name and the SHA-256 hash generated client-side. This creates a User record on-chain.
+Input: name (string), documentHash (string ù SHA-256 hex)
+Output: UserRegistered event emitted on blockchain
+Constraint: Each wallet address can only register once
+FR-03: Node 1 Verification with Hash Confirmation
+Node 1 (the primary verifier) approves the user after reviewing their document off-chain. During approval, Node 1 also submits the confirmed document hash ù which must match what the user registered. This locks the verified hash permanently on-chain.
+Input: userAddress (address), confirmedHash (string)
+Smart contract checks: keccak256(registeredHash) == keccak256(confirmedHash)
+If match: isVerified = true, verifiedHash locked, verifiedBy = Node1 address
+If mismatch: Transaction reverted with 'Hash mismatch ù document not matching'
+Output: UserVerified event emitted with verifier address and timestamp
+FR-04: Multi-Entity Hash Verification
+This is the core innovation of v3. When any registered entity node ù a bank, crypto exchange, insurance company, government portal, healthcare provider, DeFi platform, telecom operator, or any other type ù needs to verify a user, the user uploads their document on the DApp. The DApp generates the hash client-side and sends only the hash to the entity's API endpoint. The entity calls checkDocumentHash() on the smart contract to cross-check.
+Input: userAddress (address), submittedHash (string from DApp), entityType (enum)
+Smart contract checks: submittedHash == verifiedHash AND isVerified == true AND entityType is registered
+If all true: HashCheckPassed event emitted with entity type and address, returns true
+If any false: HashCheckFailed event emitted with entity type and address, returns false
+Critical: No entity node ever receives or stores the original document
+Critical: The document hash is generated on the user's device ù not on any entity's server
+Critical: The same verifiedHash is used for all entity types ù one hash, universal reuse
+FR-05: KYC Revocation
+Any authorized verifier can revoke a user's KYC status at any time ù for fraud, expired documents, or compliance violations. Revocation propagates instantly to all entity types.
+Input: userAddress (address)
+Output: isVerified = false, UserRevoked event emitted permanently on-chain
+Effect: All subsequent hash checks for this user return false immediately ù across all entity types without exception
+FR-06: Entity Registry Management
+The admin manages the on-chain Entity Registry, which tracks all authorized verifying nodes across all entity types.
+registerEntity(address, entityType, name, apiEndpoint): Admin registers a new entity node with its type classification
+removeEntity(address): Admin removes an entity from the registry
+updateEntityEndpoint(address, newEndpoint): Admin or entity updates API endpoint
+getEntityInfo(address): Returns entity type, name, API endpoint, and status for any address
+Entity types enum: BANK, CRYPTO_EXCHANGE, INSURANCE, GOVERNMENT, HEALTHCARE, DEFI, TELECOM, OTHER
+Constraint: Only admin (contract deployer) can register or remove entities
+FR-07: Verifier Management
+addVerifier(address): Admin grants node verifier privileges (Node 1 capability)
+removeVerifier(address): Admin revokes verifier privileges
+Constraint: Only admin (contract deployer) can manage verifiers
+5.3 Frontend Module
+FR-08: Wallet Connection
+MetaMask browser extension integration via ethers.js
+Display connected wallet address and current network
+Prompt user to switch to Sepolia testnet if on wrong network
+FR-09: User Registration UI
+Name field + document file picker
+Hash auto-generated on file selection ù displayed to user for transparency
+Clear label: 'Your document stays on your device ù only the hash is submitted'
+Submit calls registerUser(name, hash) via MetaMask transaction
+Show transaction confirmation and Etherscan link
+FR-10: Multi-Entity Access Request UI
+Entity selector: user chooses the entity type they want access from (Bank, Exchange, Insurance, Government, Healthcare, DeFi, Telecom, Other)
+Entity instance selector: within each type, user picks the specific institution (e.g., HSBC, Binance, AXA, etc.)
+User uploads their document ù hash regenerated client-side
+DApp sends only the hash + wallet address + entity type to the selected entity's API endpoint
+DApp displays result: Access Granted or Access Denied with reason and entity-type-specific messaging
+Document is never sent to any entity at any point
+FR-11: Admin / Verifier Dashboard
+List of registered (pending) users with wallet addresses
+One-click verify button ù verifier submits confirmed hash from their off-chain review
+Revoke button for any verified user ù propagates to all entity types
+Entity Registry management: add / remove entities, assign entity types, update API endpoints
+Add / remove verifier address management
+On-chain event log: all verifications, revocations, hash checks ù filterable by entity type
+FR-12: Public Verification Status Checker
+Enter any wallet address ù see full KYC status
+Shows: isVerified, verifiedAt timestamp, verifiedBy node address, document hash
+Entity access log: shows which entity types have performed successful hash checks
+Green / Red status indicator
+6. Non-Functional Requirements
+Category
+Requirement
+Target
+Privacy
+Personal document transmitted to any entity node
+ZERO ù never transmitted
+Privacy
+Personal document stored on blockchain
+ZERO ù only hash stored
+Privacy
+Document stored on any server
+ZERO ù hash only, client-side generated
+Performance
+Hash generation time (browser, up to 10MB file)
+< 1 second
+Performance
+Smart contract read call response time
+< 1 second
+Performance
+Transaction confirmation on testnet
+< 30 seconds
+Security
+Hash collision resistance
+SHA-256 ù 2^256 combinations, practically impossible
+Security
+Access control for verifier functions
+onlyVerifier modifier enforced on-chain
+Security
+Entity type validation
+onlyRegisteredEntity modifier ù unregistered entities cannot query
+Scalability
+Number of entity types supported
+Unlimited ù Banks, Exchanges, Insurers, Govt, Healthcare, DeFi, Telecom, etc.
+Scalability
+Nodes per entity type
+Unlimited
+Compliance
+GDPR Article 25 ù Privacy by Design
+Fully compliant ù no PII on-chain or in transit
+Usability
+Time to complete first-time registration
+< 5 minutes
+Usability
+Time for any entity hash verification
+< 30 seconds
+7. Technical Architecture & Stack
+7.1 System Architecture
+The system follows a three-tier architecture with no traditional backend server. The smart contract is the backend ù all business logic, entity registry, access control, and data storage happen on-chain. The only off-chain communication is when the DApp sends a hash (not a document) to an entity node's API endpoint for cross-checking.
+In v3, the architecture scales horizontally across entity types. Each entity type (bank, exchange, insurer, etc.) operates its own independent API endpoint. All entity endpoints follow the same protocol: receive {walletAddress, documentHash}, call checkDocumentHash() on the smart contract, return the result. The smart contract is the single source of truth for all entity types simultaneously.
+7.2 Technology Stack
+Layer
+Technology
+Purpose
+Smart Contract
+Solidity ^0.8.0
+Core KYC logic, hash storage, entity registry, multi-entity verification
+Development IDE
+Remix IDE (browser-based)
+Write, compile, test, deploy contracts
+Blockchain Network
+Ethereum Sepolia Testnet
+Free test environment for deployment
+Wallet
+MetaMask Browser Extension
+User authentication and transaction signing
+Document Hashing
+Web Crypto API ù SHA-256
+Client-side hash generation ù document never leaves browser
+Frontend Framework
+React.js (Create React App)
+User interface, entity selector, and hash generation UI
+Blockchain Library
+Ethers.js v6
+Connect frontend to smart contract
+Entity API Layer
+Node.js + Express
+Per-entity API endpoints that receive hash, query blockchain, return result
+Entity Registry
+On-chain mapping (entityType => EntityConfig)
+Stores entity type, name, permissions, and API endpoint per verifier
+Styling
+Tailwind CSS
+Responsive UI components
+Block Explorer
+Etherscan (Sepolia)
+View transactions and contract state
+Version Control
+Git + GitHub
+Code management
+7.3 Smart Contract Data Structures
+struct User { string name; string documentHash; string verifiedHash; bool isVerified; uint256 verifiedAt; address verifiedBy; }
+enum EntityType { BANK, CRYPTO_EXCHANGE, INSURANCE, GOVERNMENT, HEALTHCARE, DEFI, TELECOM, OTHER }
+struct EntityInfo { EntityType entityType; string name; string apiEndpoint; bool isActive; }
+mapping(address => User) public users ù stores user record by wallet address
+mapping(address => bool) public verifiers ù tracks all authorized Node 1 verifiers
+mapping(address => EntityInfo) public entityRegistry ù stores entity info by entity address
+mapping(address => EntityType[]) public userEntityAccess ù tracks which entity types have accessed each user
+documentHash: hash submitted by user at registration
+verifiedHash: hash confirmed and locked by Node 1 at verification ù this is what all entity nodes compare against
+7.4 Smart Contract Events
+UserRegistered(address userAddress, string name) ù fired on registration
+UserVerified(address userAddress, address verifier) ù fired when Node 1 verifies
+HashCheckPassed(address userAddress, address checker, EntityType entityType) ù fired when any entity node hash matches
+HashCheckFailed(address userAddress, address checker, EntityType entityType) ù fired when hash mismatch detected at any entity node
+UserRevoked(address userAddress) ù fired on revocation
+EntityRegistered(address entityAddress, EntityType entityType, string name) ù fired when entity added to registry
+EntityRemoved(address entityAddress, EntityType entityType) ù fired when entity removed from registry
+8. System Flow & User Journeys
+8.1 First-Time Verification Flow (Node 1)
+Step 1 ù User connects MetaMask wallet to the KYC DApp
+Step 2 ù User enters their name and selects their identity document (passport, ID card, etc.)
+Step 3 ù DApp instantly computes SHA-256 hash of the document using Web Crypto API in the browser. Document never moves. Hash is displayed to the user for transparency.
+Step 4 ù User calls registerUser(name, hash) via MetaMask ù transaction confirmed on blockchain
+Step 5 ù Node 1 (bank or KYC provider) reviews the actual document off-chain via email or their existing portal
+Step 6 ù Node 1 computes the same hash from the document they reviewed, then calls verifyUser(userAddress, confirmedHash) on the smart contract
+Step 7 ù Smart contract verifies: confirmedHash must match the user's registered hash. If match, isVerified = true and verifiedHash is locked permanently on-chain. If mismatch, transaction is reverted.
+Step 8 ù UserVerified event emitted. User is now KYC-verified on blockchain and eligible for verification by any registered entity node.
+8.2 Multi-Entity Access Request Flow (Any Entity Type)
+Step 1 ù User wants access to an entity (e.g., a crypto exchange, an insurer, a government portal, a hospital, a DeFi protocol)
+Step 2 ù User visits the DApp and selects the entity type (e.g., CRYPTO_EXCHANGE) and the specific institution (e.g., Binance)
+Step 3 ù User uploads their identity document on the DApp again
+Step 4 ù DApp generates SHA-256 hash of the document client-side in the browser. Document is not sent anywhere.
+Step 5 ù DApp sends only the hash + user's wallet address + entity type to the selected entity's registered API endpoint
+Step 6 ù Entity's API calls checkDocumentHash(walletAddress, receivedHash, entityType) on the smart contract
+Step 7 ù Smart contract checks: does receivedHash match the verifiedHash on-chain? Is isVerified true? Is the calling entity registered?
+Step 8 ù If all true: HashCheckPassed event emitted with entity type and address; entity grants access. If any false: HashCheckFailed event emitted; entity denies access.
+Step 9 ù The entity never receives, stores, or processes the original document at any point.
+Step 10 ù The same flow works identically for Banks, Exchanges, Insurance companies, Government portals, Healthcare providers, DeFi platforms, Telecom operators, and any other registered entity type.
+8.3 Fraud Detection via Hash Mismatch
+If a user attempts to submit a tampered or different document to any entity node, the SHA-256 hash generated will be different from the verified hash stored on blockchain. Even changing a single pixel of an image produces a completely different hash. The mismatch is detected instantly and a HashCheckFailed event ù including the entity type ù is permanently recorded on-chain. This mechanism is universal across all entity types.
+8.4 Revocation Flow
+Step 1 ù A verifier detects fraud, expired documents, or a compliance violation
+Step 2 ù Verifier calls revokeUser(userAddress) on the smart contract
+Step 3 ù isVerified is set to false. UserRevoked event is permanently emitted on-chain.
+Step 4 ù All subsequent hash checks for this address return false immediately ù across all entity types, all nodes, all sectors. Revocation is universal.
+9. Security Design
+9.1 Privacy by Design ù The Hash Protocol
+Document hashing occurs exclusively client-side using the browser's native Web Crypto API
+The original document is never transmitted to any server, entity node, or blockchain
+All entity nodes ù regardless of type ù only ever receive a 64-character hex string
+A SHA-256 hash cannot be reverse-engineered back into the original document
+Fully compliant with GDPR Article 25 (Data Protection by Design and by Default)
+9.2 Fraud Prevention via Hash Immutability
+The verifiedHash is locked on-chain by Node 1 at the time of verification
+No one ù not even the admin ù can modify a stored hash after it is written
+Any document alteration (even 1 pixel) produces a completely different SHA-256 hash
+Hash mismatches are permanently recorded as HashCheckFailed events with entity type on-chain
+The on-chain audit trail is immutable ù fraud attempts cannot be erased and are visible to all entities
+9.3 Smart Contract Access Control
+onlyAdmin modifier: Only contract deployer can add or remove verifiers and manage the entity registry
+onlyVerifier modifier: Only whitelisted node addresses can verify, confirm hashes, or revoke
+onlyRegisteredEntity modifier: Only addresses in the entity registry can call checkDocumentHash()
+Hash match validation: verifyUser() reverts if Node 1's hash doesn't match user's registered hash
+Entity type validation: checkDocumentHash() verifies the calling entity's type matches its registry entry
+No Ether transfers in contract ù eliminates reentrancy attack surface
+Solidity ^0.8.0 ù built-in overflow and underflow protection
+10. Project Milestones & Timeline
+Day
+Milestone
+Deliverable
+Day 1
+Blockchain Basics & Environment Setup
+MetaMask installed, Remix IDE ready, Sepolia testnet connected, test ETH obtained
+Day 2
+Smart Contract Development
+KYC.sol written with multi-entity registry, entity type enum, per-entity hash verification, compiled and tested on Remix VM
+Day 3
+Testnet Deployment
+Contract deployed to Sepolia, verified on Etherscan, all functions tested on testnet including multi-entity flows
+Day 4
+Frontend Scaffolding
+React app with file picker, Web Crypto SHA-256 hashing, hash display, MetaMask connect, and entity selector UI
+Day 5
+Full Frontend Integration
+All flows working: register, Node 1 verify, multi-entity hash check (Bank/Exchange/Insurance/Govt/Healthcare), revoke, status display
+Day 6
+UI Polish & Testing
+Styled UI, error handling, hash mismatch fraud test across multiple entity types, edge case testing complete
+Day 7
+Documentation & Presentation
+README, architecture diagram, PRD v3, demo video, project report ready
+11. Success Metrics
+Metric
+Target
+Document transmitted to any entity node or blockchain
+ZERO ù never transmitted
+Hash generated client-side in browser
+YES ù Web Crypto API
+Smart contract deployed on Sepolia testnet
+YES
+Node 1 can verify user and lock hash on-chain
+YES ù working
+Bank entity hash check against blockchain
+YES ù working
+Crypto exchange entity hash check against blockchain
+YES ù working
+Insurance entity hash check against blockchain
+YES ù working
+Government portal entity hash check against blockchain
+YES ù working
+Healthcare provider entity hash check against blockchain
+YES ù working
+DeFi / Web3 platform entity hash check against blockchain
+YES ù working
+Hash mismatch fraud detection working across all entity types
+YES ù HashCheckFailed event emitted
+KYC revocation propagates to all entity nodes instantly
+YES ù isVerified = false
+Personal data stored on blockchain
+ZERO
+All user flows tested end-to-end
+YES
+12. Risks & Mitigations
+Risk
+Likelihood
+Impact
+Mitigation
+User uploads different file to any entity
+Medium
+High
+Hash mismatch automatically detected and logged on-chain as HashCheckFailed for every entity
+Unregistered entity attempts verification
+Low
+Medium
+onlyRegisteredEntity modifier reverts call; entity must be whitelisted by admin first
+Node 1 confirms wrong hash during verification
+Low
+High
+Smart contract rejects if confirmedHash != registeredHash ù transaction reverts
+Entity API endpoint becomes unavailable
+Medium
+Medium
+Each entity operates its own independent API; failures are isolated and do not affect other entities
+Browser Web Crypto API not supported
+Low
+Medium
+All modern browsers support Web Crypto API natively
+MetaMask not installed by user
+Medium
+Medium
+Show install prompt; support multiple wallet providers via WalletConnect
+Sepolia faucet unavailable for test ETH
+Low
+High
+Use multiple faucets: sepoliafaucet.com and Alchemy faucet as backup
+ABI mismatch after contract redeployment
+Medium
+High
+Always copy fresh ABI from Remix after each redeploy; store ABI in config file
+SHA-256 collision attack
+Extremely Low
+Critical
+SHA-256 has 2^256 possible outputs ù no practical collision has ever been found
+13. Traditional KYC vs This System
+Aspect
+Traditional KYC
+v2 (Bank + 1 Extra)
+v3 (Multi-Entity)
+User verifies at each institution
+YES ù every time
+NO for Node 2 only
+NO ù verify once, reuse across all entity types
+Document sent to verifying entities
+YES ù full document
+NO for Node 2
+NO ù only 64-char hash for all entities
+Entity types supported
+Any (with full re-KYC)
+Bank + 1 extra node
+Banks, Exchanges, Insurance, Govt, Healthcare, DeFi, Telecom, and more
+Entity-specific permissions
+Manual, per institution
+None ù single Node 2
+On-chain entity registry with per-type configuration
+Selective entity access
+No
+No
+YES ù user grants access to specific entity types
+Fraud detection
+Manual review
+Hash mismatch at Node 2
+Universal hash mismatch detection across all entity types
+Audit trail
+Siloed per institution
+On-chain for 2 nodes
+Unified on-chain log across all entity types
+GDPR compliance
+Complex ù PII scattered
+Improved
+Simple ù no PII stored or transmitted anywhere
+Verification speed (2nd entity+)
+Days to weeks
+Seconds
+Seconds ù same blockchain query for any entity type
+Cost per additional institution
+High ù full KYC
+Low for Node 2
+Near zero ù single hash comparison for all
+14. Future Scope & Enhancements
+Phase 2 ù Privacy Enhancement
+Zero-Knowledge Proofs (ZKP): Prove identity attributes (e.g., 'I am over 18') without revealing the document or hash
+IPFS Encrypted Storage: User optionally stores encrypted document on IPFS ù hash of IPFS CID stored on-chain
+W3C DID Standard: Replace wallet addresses with globally interoperable Decentralized Identifiers
+Selective Disclosure: User chooses which attributes to share with each entity type (name only, age only, address only, etc.)
+Phase 3 ù Ecosystem Expansion
+REST API Gateway: Allow traditional institutions across all sectors to query KYC status via standard HTTP
+Multi-chain support: Deploy on Polygon or BNB Chain for near-zero gas fees
+Mobile DApp: WalletConnect integration for mobile wallet users
+Entity-type-specific permission scopes: e.g., Government can see full KYC; DeFi platforms only see verified/not-verified
+Cross-entity analytics: Anonymized statistics on verification patterns across entity types
+Phase 4 ù Enterprise & Government
+Integration with national ID systems: Aadhaar (India), EU Digital Identity Wallet
+FATF Travel Rule compliance module for cross-border transactions
+DAO governance for trusted entity onboarding across all entity types
+SLA-backed uptime guarantees for enterprise entity API endpoints
+15. Glossary
+Term
+Definition
+KYC
+Know Your Customer ù mandatory identity verification process required by financial regulations
+Blockchain
+Decentralized, immutable ledger of transactions maintained by a peer-to-peer network
+Smart Contract
+Self-executing code deployed on blockchain that runs automatically when conditions are met
+SHA-256
+Cryptographic hash function producing a unique 64-character fingerprint for any input file
+Client-Side Hashing
+Hashing performed in the user's browser ù the original file never leaves the user's device
+Node 1
+The first institution to perform full off-chain document verification and lock the hash on-chain
+Entity Node
+Any institution or platform (bank, exchange, insurer, government, healthcare, DeFi, telecom, etc.) that verifies a user using only hash comparison against blockchain
+Entity Type
+A classification of verifying institution (BANK, EXCHANGE, INSURANCE, GOVERNMENT, HEALTHCARE, DEFI, TELECOM, OTHER) registered in the entity registry on-chain
+Entity Registry
+On-chain mapping that stores each registered entity's type, name, permissions, and API endpoint address
+verifiedHash
+The document hash confirmed by Node 1 and permanently locked in the smart contract; this is what all entity nodes compare against
+Hash Mismatch
+When the hash submitted by an entity node does not match the verifiedHash on blockchain ù indicates tampered or wrong document
+Web Crypto API
+Browser-native cryptography API used to compute SHA-256 hashes without any external library
+MetaMask
+Browser extension wallet for interacting with Ethereum-based decentralized applications
+DID
+Decentralized Identifier ù a globally unique identifier owned and controlled by the user
+Solidity
+High-level programming language for writing Ethereum smart contracts
+Testnet
+A test version of Ethereum where fake ETH is used ù no real money at risk
+Gas Fee
+Transaction fee paid to Ethereum validators to execute a smart contract function
+GDPR
+General Data Protection Regulation ù EU law governing how personal data must be handled
+ZKP
+Zero-Knowledge Proof ù prove a fact without revealing the underlying data
+ABI
+Application Binary Interface ù defines how a frontend communicates with a deployed smart contract
+AML
+Anti-Money Laundering ù regulatory requirement to detect and prevent financial crime, often combined with KYC
+ù End of Document ù
+Decentralized KYC System | PRD v3.0 | Confidential | March 2025
